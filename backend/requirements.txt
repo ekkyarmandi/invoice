@@ -1,0 +1,10 @@
+fastapi==0.115.12
+sqlalchemy==2.0.41
+uvicorn==0.34.2
+coverage==7.8.1
+pytest==8.3.5
+python-decouple==3.8
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.6
+alembic==1.14.0
