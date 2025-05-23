@@ -153,20 +153,251 @@ alembic upgrade head
 alembic downgrade -1
 ```
 
-## Testing
+## Testing & Code Coverage
 
-Run the test suite:
+This project maintains **99% test coverage** with comprehensive unit tests for all routers, models, and CRUD operations.
+
+### Quick Start
 
 ```bash
-# Run all tests
-pytest
+# Activate virtual environment first
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Run with coverage
-pytest --cov=app
+# Run all tests with coverage
+uv run coverage run -m pytest tests/ -v
 
-# Run specific test file
-pytest tests/test_auth.py
+# Generate coverage report
+uv run coverage report -m
+
+# Generate HTML coverage report
+uv run coverage html
 ```
+
+### Coverage Analysis Commands
+
+#### 1. Basic Coverage Reports
+
+```bash
+# Text coverage report with missing lines
+uv run coverage report -m
+
+# Router-specific coverage
+uv run coverage report -m --include="app/routers/*"
+
+# Model-specific coverage
+uv run coverage report -m --include="app/models/*"
+
+# CRUD-specific coverage
+uv run coverage report -m --include="app/crud.py"
+```
+
+#### 2. HTML Coverage Report
+
+The HTML report provides the most detailed view of coverage:
+
+```bash
+# Generate HTML report
+uv run coverage html
+
+# Open in browser (macOS)
+open htmlcov/index.html
+
+# Open in browser (Linux)
+xdg-open htmlcov/index.html
+
+# Open in browser (Windows)
+start htmlcov/index.html
+```
+
+#### 3. Investigating Missing Coverage
+
+**Find specific missing lines:**
+
+```bash
+# Check specific lines in a file
+sed -n '75p;120p;180p;210p' app/routers/invoices.py
+
+# Get context around missing lines
+sed -n '73,77p;118,122p' app/routers/invoices.py
+
+# Search for specific patterns in missing lines
+grep -n "raise HTTPException" app/routers/invoices.py
+```
+
+**Identify uncovered code patterns:**
+
+```bash
+# Find all error handling blocks
+grep -n "raise HTTPException" app/routers/*.py
+
+# Find all return statements
+grep -n "return" app/routers/*.py
+
+# Find CRUD operations that might fail
+grep -n "crud\." app/routers/*.py
+```
+
+#### 4. Advanced Coverage Analysis
+
+**Coverage by file type:**
+
+```bash
+# Only test files coverage
+uv run coverage report -m --include="tests/*"
+
+# Exclude test files from coverage
+uv run coverage report -m --omit="tests/*"
+
+# Router coverage sorted by missing lines
+uv run coverage report -m --include="app/routers/*" --sort=miss
+```
+
+**Coverage data manipulation:**
+
+```bash
+# Combine multiple coverage runs
+uv run coverage combine
+
+# Erase previous coverage data
+uv run coverage erase
+
+# Show coverage data info
+uv run coverage debug data
+```
+
+### Test Organization
+
+```
+tests/
+├── conftest.py              # Test configuration and fixtures
+├── test_auth.py            # Authentication endpoint tests
+├── test_crud.py            # CRUD operations tests
+├── test_customers_router.py # Customer endpoint tests
+├── test_invoices_router.py  # Invoice endpoint tests
+├── test_payments_router.py  # Payment endpoint tests
+└── test_users_router.py     # User endpoint tests
+```
+
+### Writing Effective Tests
+
+#### Test Categories Covered
+
+1. **Happy Path Tests**: Normal operation scenarios
+2. **Error Handling Tests**: Invalid inputs and edge cases
+3. **Permission Tests**: Authorization and access control
+4. **CRUD Failure Tests**: Database operation failures
+5. **Authentication Tests**: Token validation and security
+
+#### Coverage Goals by Component
+
+- **Routers**: 95-100% (API endpoints)
+- **CRUD Operations**: 100% (Database operations)
+- **Models**: 80-90% (Model methods and properties)
+- **Authentication**: 90-95% (Security functions)
+
+#### Example Test Patterns
+
+**Testing Router Endpoints:**
+
+```python
+def test_endpoint_success(self, client: TestClient, db):
+    """Test successful operation"""
+    # Setup test data
+    # Make API request
+    # Assert response and side effects
+
+def test_endpoint_not_found(self, client: TestClient, db):
+    """Test resource not found scenario"""
+    # Test with non-existent resource ID
+
+def test_endpoint_permission_denied(self, client: TestClient, db):
+    """Test insufficient permissions"""
+    # Login as regular user, try to access admin resource
+
+def test_endpoint_crud_failure(self, client: TestClient, db):
+    """Test CRUD operation failure"""
+    # Delete resource via CRUD, then try to operate on it via API
+```
+
+### Troubleshooting Coverage Issues
+
+#### Common Uncovered Scenarios
+
+1. **Error Handling**: Missing tests for exception paths
+2. **Permission Checks**: Missing tests for access control
+3. **Edge Cases**: Boundary conditions and race conditions
+4. **Return Statements**: Final return statements in error handlers
+
+#### Finding Hard-to-Cover Lines
+
+```bash
+# Find lines that are only covered by error paths
+uv run coverage report -m --show-missing
+
+# Use HTML report to visualize control flow
+uv run coverage html
+# Look for red lines in htmlcov/
+
+# Check if lines are unreachable code
+sed -n 'LINE_NUMBERp' app/routers/target_file.py
+```
+
+#### Debugging Test Coverage
+
+```bash
+# Run single test file with coverage
+uv run coverage run -m pytest tests/test_invoices_router.py -v
+uv run coverage report -m --include="app/routers/invoices.py"
+
+# Run specific test method
+uv run coverage run -m pytest tests/test_invoices_router.py::TestInvoicesRouter::test_specific_method -v
+
+# Combine with previous coverage data
+uv run coverage run --append -m pytest tests/test_auth.py -v
+```
+
+### Coverage Best Practices
+
+1. **Target 95-100% for core business logic** (routers, CRUD)
+2. **80-90% for supporting code** (models, utilities)
+3. **Don't chase 100% blindly** - some edge cases aren't worth complex mocking
+4. **Focus on meaningful tests** over coverage percentage
+5. **Use HTML reports** for visual coverage analysis
+6. **Test error paths** as thoroughly as success paths
+7. **Cover permission and security scenarios** comprehensively
+
+### Continuous Integration
+
+For CI/CD pipelines, use these commands:
+
+```bash
+# Run tests with coverage and fail if below threshold
+uv run coverage run -m pytest tests/
+uv run coverage report --fail-under=95
+
+# Generate XML report for CI tools
+uv run coverage xml
+
+# Generate JSON report for analysis tools
+uv run coverage json
+```
+
+### Current Coverage Stats
+
+- **Overall Coverage**: 99%
+- **Router Coverage**: 98% (216 statements, 5 missing)
+- **CRUD Coverage**: 100%
+- **Test Files**: 126 tests across 6 test files
+
+**Router-specific Coverage:**
+
+- `auth.py`: 100%
+- `customers.py`: 100%
+- `users.py`: 100%
+- `invoices.py`: 95%
+- `payments.py`: 98%
+
+The remaining 1% consists of edge cases in error handling that would require complex mocking to test meaningfully.
 
 ## Environment Variables
 

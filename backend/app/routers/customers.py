@@ -64,7 +64,7 @@ def update_customer(
     return db_customer
 
 
-@router.delete("/{customer_id}")
+@router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_customer(
     customer_id: str,
     db: Session = Depends(get_db),
@@ -76,4 +76,5 @@ def delete_customer(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
         )
-    return {"message": "Customer deleted successfully"}
+    # Return nothing for 204 No Content
+    return

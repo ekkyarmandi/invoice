@@ -156,3 +156,47 @@ def test_protected_endpoint_invalid_token(client):
         headers={"Authorization": "Bearer invalid_token"},
     )
     assert response.status_code == 401
+
+
+def test_me_endpoint(client, db):
+    """Test /me endpoint to get current user profile."""
+    # Create user first
+    user_data = schemas.UserCreate(
+        name="Test User", email="test@example.com", password="testpassword"
+    )
+    crud.create_user(db, user_data)
+
+    # Login to get token
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "test@example.com", "password": "testpassword"},
+    )
+    token = login_response.json()["access_token"]
+
+    # Get current user profile
+    response = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "test@example.com"
+    assert data["name"] == "Test User"
+    assert "id" in data
+
+
+def test_me_endpoint_invalid_token(client):
+    """Test /me endpoint with invalid token."""
+    response = client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": "Bearer invalid_token"},
+    )
+    assert response.status_code == 401
+    assert "Could not validate credentials" in response.json()["detail"]
+
+
+def test_me_endpoint_no_token(client):
+    """Test /me endpoint without token."""
+    response = client.get("/api/v1/auth/me")
+    assert response.status_code == 403
+    assert "Not authenticated" in response.json()["detail"]

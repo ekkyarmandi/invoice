@@ -69,7 +69,7 @@ def update_user(
     return db_user
 
 
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
     user_id: str,
     db: Session = Depends(get_db),
@@ -81,4 +81,5 @@ def delete_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    return {"message": "User deleted successfully"}
+    # Return nothing for 204 No Content
+    return

@@ -96,7 +96,7 @@ def update_invoice(
     return db_invoice
 
 
-@router.delete("/{invoice_id}")
+@router.delete("/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_invoice(
     invoice_id: str,
     db: Session = Depends(get_db),
@@ -120,7 +120,8 @@ def delete_invoice(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found"
         )
-    return {"message": "Invoice deleted successfully"}
+    # Return nothing for 204 No Content
+    return
 
 
 # Invoice Items endpoints
@@ -182,7 +183,7 @@ def update_invoice_item(
     return db_item
 
 
-@router.delete("/items/{item_id}")
+@router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_invoice_item(
     item_id: str,
     db: Session = Depends(get_db),
@@ -209,4 +210,5 @@ def delete_invoice_item(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Invoice item not found"
         )
-    return {"message": "Invoice item deleted successfully"}
+    # Return nothing for 204 No Content
+    return

@@ -27,13 +27,15 @@ class TestUsersRouter:
 
         # Login as super admin
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         )
         token = login_response.json()["access_token"]
 
         # Get all users
-        response = client.get("/users/", headers={"Authorization": f"Bearer {token}"})
+        response = client.get(
+            "/api/v1/users/", headers={"Authorization": f"Bearer {token}"}
+        )
         assert response.status_code == 200
         users = response.json()
         assert len(users) == 4  # 3 regular users + 1 super admin
@@ -51,12 +53,15 @@ class TestUsersRouter:
 
         # Login as regular user
         login_response = client.post(
-            "/auth/login", json={"email": "user@example.com", "password": "password"}
+            "/api/v1/auth/login",
+            json={"email": "user@example.com", "password": "password"},
         )
         token = login_response.json()["access_token"]
 
         # Try to get all users (should fail)
-        response = client.get("/users/", headers={"Authorization": f"Bearer {token}"})
+        response = client.get(
+            "/api/v1/users/", headers={"Authorization": f"Bearer {token}"}
+        )
         assert response.status_code == 403
 
     def test_read_users_pagination(self, client: TestClient, db):
@@ -82,14 +87,15 @@ class TestUsersRouter:
 
         # Login as super admin
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         )
         token = login_response.json()["access_token"]
 
         # Test pagination
         response = client.get(
-            "/users/?skip=2&limit=3", headers={"Authorization": f"Bearer {token}"}
+            "/api/v1/users/?skip=2&limit=3",
+            headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 200
         users = response.json()
@@ -108,13 +114,14 @@ class TestUsersRouter:
 
         # Login
         login_response = client.post(
-            "/auth/login", json={"email": "user@example.com", "password": "password"}
+            "/api/v1/auth/login",
+            json={"email": "user@example.com", "password": "password"},
         )
         token = login_response.json()["access_token"]
 
         # Read own profile
         response = client.get(
-            f"/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
+            f"/api/v1/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 200
         user_data = response.json()
@@ -144,13 +151,14 @@ class TestUsersRouter:
 
         # Login as user1
         login_response = client.post(
-            "/auth/login", json={"email": "user1@example.com", "password": "password"}
+            "/api/v1/auth/login",
+            json={"email": "user1@example.com", "password": "password"},
         )
         token = login_response.json()["access_token"]
 
         # Try to read user2's profile (should fail)
         response = client.get(
-            f"/users/{user2.id}", headers={"Authorization": f"Bearer {token}"}
+            f"/api/v1/users/{user2.id}", headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 403
 
@@ -176,14 +184,14 @@ class TestUsersRouter:
 
         # Login as super admin
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         )
         token = login_response.json()["access_token"]
 
         # Read user's profile
         response = client.get(
-            f"/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
+            f"/api/v1/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 200
         user_data = response.json()
@@ -202,14 +210,16 @@ class TestUsersRouter:
 
         # Login as super admin
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         )
         token = login_response.json()["access_token"]
 
         # Try to read non-existent user
+        non_existent_id = "12345678-1234-1234-1234-123456789012"
         response = client.get(
-            "/users/nonexistent-id", headers={"Authorization": f"Bearer {token}"}
+            f"/api/v1/users/{non_existent_id}",
+            headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 404
 
@@ -226,20 +236,22 @@ class TestUsersRouter:
 
         # Login
         login_response = client.post(
-            "/auth/login", json={"email": "user@example.com", "password": "password"}
+            "/api/v1/auth/login",
+            json={"email": "user@example.com", "password": "password"},
         )
         token = login_response.json()["access_token"]
 
         # Update own profile
         update_data = {"name": "Updated Name"}
         response = client.put(
-            f"/users/{user.id}",
+            f"/api/v1/users/{user.id}",
             json=update_data,
             headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 200
         updated_user = response.json()
         assert updated_user["name"] == "Updated Name"
+        assert updated_user["email"] == user.email  # Email should remain the same
 
     def test_update_user_other_profile_as_regular_user_forbidden(
         self, client: TestClient, db
@@ -264,14 +276,15 @@ class TestUsersRouter:
 
         # Login as user1
         login_response = client.post(
-            "/auth/login", json={"email": "user1@example.com", "password": "password"}
+            "/api/v1/auth/login",
+            json={"email": "user1@example.com", "password": "password"},
         )
         token = login_response.json()["access_token"]
 
         # Try to update user2's profile (should fail)
         update_data = {"name": "Hacked Name"}
         response = client.put(
-            f"/users/{user2.id}",
+            f"/api/v1/users/{user2.id}",
             json=update_data,
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -292,14 +305,15 @@ class TestUsersRouter:
 
         # Login
         login_response = client.post(
-            "/auth/login", json={"email": "user@example.com", "password": "password"}
+            "/api/v1/auth/login",
+            json={"email": "user@example.com", "password": "password"},
         )
         token = login_response.json()["access_token"]
 
-        # Try to make themselves super admin (should fail)
+        # Try to make self super admin (should fail)
         update_data = {"is_super_admin": True}
         response = client.put(
-            f"/users/{user.id}",
+            f"/api/v1/users/{user.id}",
             json=update_data,
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -329,7 +343,7 @@ class TestUsersRouter:
 
         # Login as super admin
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         )
         token = login_response.json()["access_token"]
@@ -337,7 +351,7 @@ class TestUsersRouter:
         # Make user super admin
         update_data = {"is_super_admin": True}
         response = client.put(
-            f"/users/{user.id}",
+            f"/api/v1/users/{user.id}",
             json=update_data,
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -358,15 +372,16 @@ class TestUsersRouter:
 
         # Login as super admin
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         )
         token = login_response.json()["access_token"]
 
         # Try to update non-existent user
+        non_existent_id = "12345678-1234-1234-1234-123456789012"
         update_data = {"name": "New Name"}
         response = client.put(
-            "/users/nonexistent-id",
+            f"/api/v1/users/{non_existent_id}",
             json=update_data,
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -394,17 +409,22 @@ class TestUsersRouter:
 
         # Login as super admin
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         )
         token = login_response.json()["access_token"]
 
         # Delete user
         response = client.delete(
-            f"/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
+            f"/api/v1/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
         )
-        assert response.status_code == 200
-        assert response.json()["message"] == "User deleted successfully"
+        assert response.status_code == 204
+
+        # Verify user is deleted
+        response = client.get(
+            f"/api/v1/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
+        )
+        assert response.status_code == 404
 
     def test_delete_user_as_regular_user_forbidden(self, client: TestClient, db):
         """Test that regular users cannot delete users."""
@@ -427,13 +447,14 @@ class TestUsersRouter:
 
         # Login as user1
         login_response = client.post(
-            "/auth/login", json={"email": "user1@example.com", "password": "password"}
+            "/api/v1/auth/login",
+            json={"email": "user1@example.com", "password": "password"},
         )
         token = login_response.json()["access_token"]
 
         # Try to delete user2 (should fail)
         response = client.delete(
-            f"/users/{user2.id}", headers={"Authorization": f"Bearer {token}"}
+            f"/api/v1/users/{user2.id}", headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 403
 
@@ -450,38 +471,49 @@ class TestUsersRouter:
 
         # Login as super admin
         login_response = client.post(
-            "/auth/login",
+            "/api/v1/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         )
         token = login_response.json()["access_token"]
 
         # Try to delete non-existent user
+        non_existent_id = "12345678-1234-1234-1234-123456789012"
         response = client.delete(
-            "/users/nonexistent-id", headers={"Authorization": f"Bearer {token}"}
+            f"/api/v1/users/{non_existent_id}",
+            headers={"Authorization": f"Bearer {token}"},
         )
         assert response.status_code == 404
 
     def test_unauthorized_access(self, client: TestClient):
         """Test that all endpoints require authentication."""
         # Test without token
-        response = client.get("/users/")
-        assert response.status_code == 401
+        response = client.get("/api/v1/users/")
+        assert response.status_code == 403
 
-        response = client.get("/users/some-id")
-        assert response.status_code == 401
+        # Test other endpoints
+        test_user_id = "12345678-1234-1234-1234-123456789012"
+        response = client.get(f"/api/v1/users/{test_user_id}")
+        assert response.status_code == 403
 
-        response = client.put("/users/some-id", json={"name": "New Name"})
-        assert response.status_code == 401
+        response = client.put(f"/api/v1/users/{test_user_id}", json={"name": "Test"})
+        assert response.status_code == 403
 
-        response = client.delete("/users/some-id")
-        assert response.status_code == 401
+        response = client.delete(f"/api/v1/users/{test_user_id}")
+        assert response.status_code == 403
 
     def test_invalid_token(self, client: TestClient):
         """Test that invalid tokens are rejected."""
         # Test with invalid token
         invalid_token = "invalid.jwt.token"
+        test_user_id = "12345678-1234-1234-1234-123456789012"
 
         response = client.get(
-            "/users/", headers={"Authorization": f"Bearer {invalid_token}"}
+            "/api/v1/users/", headers={"Authorization": f"Bearer {invalid_token}"}
+        )
+        assert response.status_code == 401
+
+        response = client.get(
+            f"/api/v1/users/{test_user_id}",
+            headers={"Authorization": f"Bearer {invalid_token}"},
         )
         assert response.status_code == 401

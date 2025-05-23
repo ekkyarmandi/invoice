@@ -97,7 +97,7 @@ def update_payment(
     return db_payment
 
 
-@router.delete("/{payment_id}")
+@router.delete("/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_payment(
     payment_id: str,
     db: Session = Depends(get_db),
@@ -121,4 +121,5 @@ def delete_payment(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found"
         )
-    return {"message": "Payment deleted successfully"}
+    # Return nothing for 204 No Content
+    return
